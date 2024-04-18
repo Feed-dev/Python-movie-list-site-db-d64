@@ -1,10 +1,1 @@
-# Ignore the .env file to keep secrets out of source control
 .env
-
-# Python and PyCharm-specific ignores
-__pycache__/
-*.pyc
-.DS_Store
-.idea/
-venv/
-*.log
