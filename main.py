@@ -4,17 +4,17 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField
 from wtforms.validators import DataRequired
-from dotenv import load_dotenv
 import os
+import requests
 
-load_dotenv()  # This loads the environment variables from the .env file.
+# Load environment variables
+from dotenv import load_dotenv
+load_dotenv()
 
 api_key = os.getenv('TMDB_API_KEY')
-access_token = os.getenv('TMDB_API_READ_ACCESS_TOKEN')
 
 # Determine the base directory
 basedir = os.path.abspath(os.path.dirname(__file__))
-
 
 def create_app():
     app = Flask(__name__)
@@ -44,28 +44,47 @@ def create_app():
     with app.app_context():
         db.create_all()
 
-    # Home route
-    @app.route("/")
+    class MovieSearchForm(FlaskForm):
+        title = StringField('Movie Title', validators=[DataRequired()])
+        submit = SubmitField('Search')
+
+    @app.route("/", methods=["GET"])
     def home():
         movies = Movie.query.order_by(Movie.ranking).all()
         return render_template("index.html", movies=movies)
 
-    # Add movie route
     @app.route("/add", methods=["GET", "POST"])
     def add_movie():
-        if request.method == "POST":
-            new_movie = Movie(
-                title=request.form["title"],
-                year=request.form["year"],
-                description=request.form["description"],
-                img_url=request.form["img_url"]
-            )
-            db.session.add(new_movie)
-            db.session.commit()
-            return redirect(url_for('home'))
-        return render_template("add.html")
+        form = MovieSearchForm()
+        if form.validate_on_submit():
+            return redirect(url_for('select_movie', title=form.title.data))
+        return render_template("add.html", form=form)
 
-    # Edit movie route using WTForms
+    @app.route("/select", methods=["GET"])
+    def select_movie():
+        title = request.args.get('title')
+        response = requests.get(
+            f"https://api.themoviedb.org/3/search/movie?api_key={api_key}&query={title}"
+        )
+        movies = response.json().get('results', [])
+        return render_template("select.html", movies=movies)
+
+    @app.route("/add_movie_details/<int:movie_id>", methods=["GET"])
+    def add_movie_details(movie_id):
+        response = requests.get(
+            f"https://api.themoviedb.org/3/movie/{movie_id}?api_key={api_key}"
+        )
+        movie_data = response.json()
+        new_movie = Movie(
+            title=movie_data['title'],
+            year=movie_data['release_date'].split("-")[0],
+            description=movie_data['overview'],
+            img_url=f"https://image.tmdb.org/t/p/w500{movie_data['poster_path']}"
+        )
+        db.session.add(new_movie)
+        db.session.commit()
+        return redirect(url_for('edit_movie', movie_id=new_movie.id))
+
     @app.route("/edit/<int:movie_id>", methods=["GET", "POST"])
     def edit_movie(movie_id):
         movie = Movie.query.get_or_404(movie_id)
@@ -77,7 +96,6 @@ def create_app():
             return redirect(url_for('home'))
         return render_template("edit.html", form=form, movie=movie)
 
-    # Delete movie route
     @app.route("/delete/<int:movie_id>")
     def delete_movie(movie_id):
         movie = Movie.query.get_or_404(movie_id)
@@ -85,7 +103,6 @@ def create_app():
         db.session.commit()
         return redirect(url_for('home'))
 
-    # Define the RateMovieForm using WTForms
     class RateMovieForm(FlaskForm):
         rating = StringField('Rating', validators=[DataRequired()])
         review = StringField('Review', validators=[DataRequired()])
@@ -97,3 +114,4 @@ app = create_app()
 
 if __name__ == '__main__':
     app.run(debug=True)
+
