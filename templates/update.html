@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Movie{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h1 class="heading">Edit Movie: {{ form.title.data }}</h1>
+  <form action="" method="post">
+    {{ form.hidden_tag() }}
+    <div>
+      {{ form.title.label }} {{ form.title(class="form-control") }}
+    </div>
+    <div>
+      {{ form.year.label }} {{ form.year(class="form-control") }}
+    </div>
+    <div>
+      {{ form.description.label }} {{ form.description(class="form-control") }}
+    </div>
+    <div>
+      {{ form.rating.label }} {{ form.rating(class="form-control") }}
+    </div>
+    <div>
+      {{ form.ranking.label }} {{ form.ranking(class="form-control") }}
+    </div>
+    <div>
+      {{ form.review.label }} {{ form.review(class="form-control") }}
+    </div>
+    <div>
+      {{ form.img_url.label }} {{ form.img_url(class="form-control") }}
+    </div>
+    <div class="mt-3">
+      {{ form.submit(class="btn btn-primary") }}
+    </div>
+  </form>
+</div>
+{% endblock %}
