@@ -4,10 +4,17 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField
 from wtforms.validators import DataRequired
+from dotenv import load_dotenv
 import os
+
+load_dotenv()  # This loads the environment variables from the .env file.
+
+api_key = os.getenv('TMDB_API_KEY')
+access_token = os.getenv('TMDB_API_READ_ACCESS_TOKEN')
 
 # Determine the base directory
 basedir = os.path.abspath(os.path.dirname(__file__))
+
 
 def create_app():
     app = Flask(__name__)
