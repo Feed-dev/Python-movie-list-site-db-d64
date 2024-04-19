@@ -16,6 +16,7 @@ api_key = os.getenv('TMDB_API_KEY')
 # Determine the base directory
 basedir = os.path.abspath(os.path.dirname(__file__))
 
+
 def create_app():
     app = Flask(__name__)
     app.config['SECRET_KEY'] = '8BYkEfBA6O6donzWlSihBXox7C0sKR6b'
@@ -50,7 +51,10 @@ def create_app():
 
     @app.route("/", methods=["GET"])
     def home():
-        movies = Movie.query.order_by(Movie.ranking).all()
+        movies = Movie.query.order_by(Movie.rating.desc()).all()
+        for index, movie in enumerate(movies, start=1):
+            movie.ranking = index
+        db.session.commit()
         return render_template("index.html", movies=movies)
 
     @app.route("/add", methods=["GET", "POST"])
@@ -93,7 +97,7 @@ def create_app():
             movie.rating = form.rating.data
             movie.review = form.review.data
             db.session.commit()
-            return redirect(url_for('home'))
+            return redirect(url_for('home'))  # Redirect to home to recalculate rankings
         return render_template("edit.html", form=form, movie=movie)
 
     @app.route("/delete/<int:movie_id>")
@@ -109,6 +113,7 @@ def create_app():
         submit = SubmitField('Submit')
 
     return app
+
 
 app = create_app()
 
