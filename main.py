@@ -77,7 +77,7 @@ def create_app():
         movie_data = response.json()
         new_movie = Movie(
             title=movie_data['title'],
-            year=movie_data['release_date'].split("-")[0],
+            year=movie_data['release_date'].split("-")[0] if movie_data['release_date'] else None,
             description=movie_data['overview'],
             img_url=f"https://image.tmdb.org/t/p/w500{movie_data['poster_path']}"
         )
@@ -114,4 +114,3 @@ app = create_app()
 
 if __name__ == '__main__':
     app.run(debug=True)
-
